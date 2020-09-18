@@ -20,12 +20,12 @@ const posts = [
 ];
 
 export const getPosts = async () => {
-    await sleep(500);
+    await sleep(100);
     return posts;
 };
 
 export const getPostById = async id => {
-    await sleep(500);
+    await sleep(100);
     return posts.find(post => post.id === id);
 };
 
