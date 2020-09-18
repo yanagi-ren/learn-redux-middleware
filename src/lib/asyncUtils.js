@@ -17,6 +17,28 @@ export const createPromiseThunk = (type, promiseCreator) => {
       }
     };
   };
+
+const defaultIdSelector = param => param;
+
+export const createPromiseThunkById = (type, promiseCreator, idSelector = defaultIdSelector) => {
+  const [SUCCESS, ERROR] = [`${type}_SUCCESS`, `${type}_ERROR`];
+  
+    // 이 함수는 promiseCreator가 단 하나의 파라미터만 받는다는 전제하에 작성되었습니다.
+    // 만약 여러 종류의 파라미터를 전달해야하는 상황에서는 객체 타입의 파라미터를 받아오도록 하면 됩니다.
+    // 예: writeComment({ postId: 1, text: '댓글 내용' });
+    return param => async dispatch => {
+      const id = idSelector(param);
+      // 요청 시작
+      dispatch({ type, meta: id });
+      try {
+        // 결과물의 이름을 payload 라는 이름으로 통일시킵니다.
+        const payload = await promiseCreator(param);
+        dispatch({ type: SUCCESS, payload, meta: id }); // 성공
+      } catch (e) {
+        dispatch({ type: ERROR, payload: e, error: true, meta: id }); // 실패
+      }
+    };
+}
   
   
   // 리듀서에서 사용 할 수 있는 여러 유틸 함수들입니다.
@@ -69,6 +91,41 @@ export const createPromiseThunk = (type, promiseCreator) => {
           return {
             ...state,
             [key]: reducerUtils.error(action.payload)
+          };
+        default:
+          return state;
+      }
+    };
+  };
+
+  export const handleAsyncActionsById = (type, key, keepData) => {
+    const [SUCCESS, ERROR] = [`${type}_SUCCESS`, `${type}_ERROR`];
+    return (state, action) => {
+      const id = action.meta;
+      switch (action.type) {
+        case type:
+          return {
+            ...state,
+            [key]: {
+              ...state[key],
+              [id]: reducerUtils.loading(keepData ? (state[key][id] && state[key][id].data) : null)
+            }
+          };
+        case SUCCESS:
+          return {
+            ...state,
+            [key]: {
+              ...state[key],
+              [id]: reducerUtils.success(action.payload)
+            }
+          };
+        case ERROR:
+          return {
+            ...state,
+            [key]: {
+              ...state[key],
+              [id]: reducerUtils.error(action.payload)
+            }
           };
         default:
           return state;
