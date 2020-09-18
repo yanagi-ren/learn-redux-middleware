@@ -1,14 +1,17 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Post from '../components/Post';
-import { getPost } from '../modules/posts';
+import { getPost, clearPost } from '../modules/posts';
 
 function PostContainer({ postId }) {
     const { data, loading, error } = useSelector(state => state.posts.post);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(getPost(postId))
+        dispatch(getPost(postId));
+        return () => {
+            dispatch(clearPost());
+        };
     }, [postId, dispatch]);
 
     if (loading) return <div>loading..</div>
