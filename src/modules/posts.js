@@ -21,17 +21,61 @@ const CLEAR_POST = 'CLEAR_POST';
 
 // 아주 쉽게 thunk 함수를 만들 수 있게 되었습니다.
 export const getPosts = createPromiseThunk(GET_POSTS, postsAPI.getPosts);
-export const getPost = createPromiseThunk(GET_POST, postsAPI.getPostById);
+export const getPost = id => async dispatch => {
+  dispatch({ type: GET_POST, meta: id });
+  try {
+    const payload = await postsAPI.getPostById(id);
+    dispatch({ type: GET_POST_SUCCESS, payload, meta: id })
+  } catch (e) {
+    dispatch({
+      type: GET_POSTS_ERROR,
+      payload: e,
+      error: true,
+      meta: id
+    })
+  }
+};
+
 export const clearPost = () => ({ type: CLEAR_POST });
 
 // initialState 쪽도 반복되는 코드를 initial() 함수를 사용해서 리팩토링 했습니다.
 const initialState = {
   posts: reducerUtils.initial(),
-  post: reducerUtils.initial()
+  post: {}
 };
 
 const getPostsReducer = handleAsyncActions(GET_POSTS, 'posts', true);
-const getPostReducer = handleAsyncActions(GET_POST, 'post');
+const getPostReducer = (state, action) => {
+  const id = action.meta;
+  switch (action.type) {
+    case GET_POST:
+      return {
+        ...state,
+        post: {
+          ...state.post,
+          [id]: reducerUtils.loading(state.post[id] && state.post[id].data)
+        }
+      };
+    case GET_POST_SUCCESS:
+      return {
+        ...state,
+        post: {
+          ...state.post,
+          [id]: reducerUtils.success(action.payload)
+        }
+      };
+    case GET_POST_ERROR:
+      return {
+        ...state,
+        post: {
+          ...state.post,
+          [id]: reducerUtils.error(action.payload)
+        }
+      };
+    default:
+      return state;
+  }
+}
 
 export default function posts(state = initialState, action) {
   switch (action.type) {
