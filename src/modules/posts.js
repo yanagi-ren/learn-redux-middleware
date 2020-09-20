@@ -23,6 +23,9 @@ const CLEAR_POST = 'CLEAR_POST';
 // 아주 쉽게 thunk 함수를 만들 수 있게 되었습니다.
 export const getPosts = createPromiseThunk(GET_POSTS, postsAPI.getPosts);
 export const getPost = createPromiseThunkById(GET_POST, postsAPI.getPostById);
+export const goToHome = () => (dispatch, getState, { history }) => {
+  history.push('/');
+};
 
 export const clearPost = () => ({ type: CLEAR_POST });
 
