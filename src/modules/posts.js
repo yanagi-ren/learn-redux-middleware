@@ -1,10 +1,12 @@
 import * as postsAPI from '../api/posts'; // api/posts 안의 함수 모두 불러오기
 import {
+  createPromiseSaga,
+  createPromiseSagaById,
   reducerUtils,
   handleAsyncActions, 
   handleAsyncActionsById
 } from '../lib/asyncUtils';
-import { call, put, takeEvery } from 'redux-saga/effects';
+import { takeEvery } from 'redux-saga/effects';
 
 /* 액션 타입 */
 
@@ -27,40 +29,9 @@ export const getPost = (id) => ({
   meta: id,
 });
 
-function* getPostsSaga() {
-  try {
-    const posts = yield call(postsAPI.getPosts);
-    yield put({
-      type: GET_POSTS_SUCCESS,
-      payload: posts
-    });
-  } catch (e) {
-    yield put({
-      type: GET_POSTS_ERROR,
-      payload: e,
-      error: true
-    })
-  }
-};
+const getPostsSaga = createPromiseSaga(GET_POSTS, postsAPI.getPosts);
+const getPostSaga = createPromiseSagaById(GET_POST, postsAPI.getPostById);
 
-function* getPostSaga(action) {
-  const id = action.payload;
-  try {
-    const post = yield call(postsAPI.getPostById, id);
-    yield put({
-      type: GET_POST_SUCCESS,
-      payload: post,
-      meta: id
-    });
-  } catch (e) {
-    yield put({
-      type: GET_POST_ERROR,
-      payload: e,
-      error: true,
-      meta: id
-    });
-  }
-}
 
 export function* postsSaga() {
   yield takeEvery(GET_POSTS, getPostsSaga);
